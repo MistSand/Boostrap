@@ -573,17 +573,19 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     if ($next.hasClass('active')) return (this.sliding = false)//下一个就为当前显示item，直接返回
 
     var relatedTarget = $next[0]
+	//触发轮播即将开始自定义事件
     var slideEvent = $.Event('slide.bs.carousel', {//滚动效果对象
       relatedTarget: relatedTarget,
       direction: direction
     })
+	//trigger() 方法触发被选元素的指定事件类型
     this.$element.trigger(slideEvent)
     if (slideEvent.isDefaultPrevented()) return
 
     this.sliding = true
-
-    isCycling && this.pause()
-
+	
+    isCycling && this.pause()//如果isCycling为真那么就不暂停
+	
     if (this.$indicators.length) {
       this.$indicators.find('.active').removeClass('active')
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
