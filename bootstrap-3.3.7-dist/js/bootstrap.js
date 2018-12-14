@@ -528,19 +528,14 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//如果轮播图正在滚动切换，那么滚动到指定轮播项需要等到滚动切换结束（即监听到slid.bs.carousel）时才能继续操作
     if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }) // yes, "slid"
     if (activeIndex == pos) return this.pause().cycle()
-
+	//如果当前就是目标pos，那么就直接暂停，并在此自动轮播
+	//否则的话就看pos是否大于当前，如果是的话就时next不是就是perv
     return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
   }
-
-	/*
-	疑问：
-	1、
-	
-*/
 	//暂停功能
   Carousel.prototype.pause = function (e) {
     e || (this.paused = true)//暂停开启
-
+	//
     if (this.$element.find('.next, .prev').length && $.support.transition) {
       this.$element.trigger($.support.transition.end)
       this.cycle(true)
