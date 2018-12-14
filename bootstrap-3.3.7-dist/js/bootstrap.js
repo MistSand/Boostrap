@@ -535,19 +535,19 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//暂停功能
   Carousel.prototype.pause = function (e) {
     e || (this.paused = true)//暂停开启
-	//
+	//如果刚好为轮播添加next/prev类即将开始滚动并且浏览器支持动画，鼠标移入，那么直接触发动画结束自定义事件
     if (this.$element.find('.next, .prev').length && $.support.transition) {
       this.$element.trigger($.support.transition.end)
       this.cycle(true)
     }
 
-    this.interval = clearInterval(this.interval)
+    this.interval = clearInterval(this.interval)//清空定时器函数
 
     return this
   }
 	//下一页功能
   Carousel.prototype.next = function () {
-    if (this.sliding) return
+    if (this.sliding) return//如果轮播图正在滚动切换，那么上下轮播切换不做任何操作
     return this.slide('next')
   }
 	//前一页功能
@@ -561,14 +561,15 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	1、
 	
 */
-	//实现滚动效果
+	//实现滚动效果//滚动函数
   Carousel.prototype.slide = function (type, next) {// 参数 方向、下一个item
     var $active   = this.$element.find('.item.active')//得到当前显示的item
+	//将next时可选参数，如果有就给$next，没有就用默认的，也就是当前页面
     var $next     = next || this.getItemForDirection(type, $active)//语法可参考，得到下一个item
     var isCycling = this.interval//滚动时间
     var direction = type == 'next' ? 'left' : 'right'//下一步向左，反之向右
     var that      = this
-
+	//如果next正是当前页面，那么就停止滚动
     if ($next.hasClass('active')) return (this.sliding = false)//下一个就为当前显示item，直接返回
 
     var relatedTarget = $next[0]
