@@ -3,13 +3,13 @@
  * version: 1.12.1
  * https://github.com/wenzhixin/bootstrap-table/
  */
-
+/*================================================================BootstrapTable工具函数==========================================================*/
 (function ($) {
     'use strict';
 
     // TOOLS DEFINITION
     // ======================
-
+	//获得版本号，不同版本用不同的标签class
     var bootstrapVersion = 3;
     try {
         bootstrapVersion = parseInt($.fn.dropdown.Constructor.VERSION, 10);
@@ -309,7 +309,7 @@
 
     // BOOTSTRAP TABLE CLASS DEFINITION
     // ======================
-
+/*================================================================BootstrapTable构造函数==========================================================*/
     var BootstrapTable = function (el, options) {
         this.options = options;
         this.$el = $(el);
@@ -2458,7 +2458,7 @@
 
     // PUBLIC FUNCTION DEFINITION
     // =======================
-
+/*==================================================================公共方法（通过bootstrap（fnName，args）调用）==============================================================*/
     BootstrapTable.prototype.resetView = function (params) {
         var padding = 0;
 
@@ -2840,7 +2840,8 @@
         this.initBody(true);
     };
 
-    BootstrapTable.prototype.getOptions = function () {
+	    
+	BootstrapTable.prototype.getOptions = function () {
         //Deep copy
         return $.extend(true, {}, this.options);
     };
@@ -3207,7 +3208,8 @@
 
     // BOOTSTRAP TABLE PLUGIN DEFINITION
     // =======================
-
+	/*==================================================================插件初始化和开放接口==============================================================*/ 
+	//table插件默认实现的方法
     var allowedMethods = [
         'getOptions',
         'getSelections', 'getAllSelections', 'getData',
@@ -3236,8 +3238,8 @@
         'expandRow', 'collapseRow', 'expandAllRows', 'collapseAllRows',
         'updateFormatText', 'updateCellById'
     ];
-
-    $.fn.bootstrapTable = function (option) {
+	//对外提供接口bootstrapTable
+    $.fn.bootstrapTable = function (option) {//参数为初始化对象，或者方法
         var value,
             args = Array.prototype.slice.call(arguments, 1);
 
@@ -3247,8 +3249,8 @@
                 options = $.extend({}, BootstrapTable.DEFAULTS, $this.data(),
                     typeof option === 'object' && option);
 
-            if (typeof option === 'string') {
-                if ($.inArray(option, allowedMethods) < 0) {
+            if (typeof option === 'string') {//如果为字符串判断是否是方法
+                if ($.inArray(option, allowedMethods) < 0) {//option是否为已有方法
                     throw new Error("Unknown method: " + option);
                 }
 
