@@ -427,31 +427,30 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//构造器 
   var Carousel = function (element, options) {//参数 元素 和 行为
     this.$element    = $(element)//容器元素，因为不管单击哪个，最终都会转换到data-ride="carousel"容器元素
-    this.$indicators = this.$element.find('.carousel-indicators')//查找.carousel-indicators的元素
-	//查找小圆圈指示符元素集合
+    this.$indicators = this.$element.find('.carousel-indicators')//查找.carousel-indicators的元素//查找小圆圈指示符元素集合
     this.options     = options
 	//插件运行参数，优先级最高的是所单击元素上的data-属性，然后是容器的data-属性
     this.paused      = null//暂停
     this.sliding     = null//滑动
     this.interval    = null//轮播切换的时间间隔
-    this.$active     = null//当前轮播的intem
+    this.$active     = null//当前轮播的item
     this.$items      = null//存储所有轮播图片的对象
 	//如果this.options.keyboard为true，那么就监听键盘事件
 	//keydowm.bs.carousel是bootstrap自己设定的函数事件，类似于"click"这样的，后面是函数
 	//$.proxy 描述：接受一个函数，然后返回一个新函数，并且这个新函数始终保持了特定的上下文语境。
 	//所以实现的功能是在this.keydown中强制执行this。this.keydown是prototype中的一个函数
-    this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this))
-		//$.proxy方法 调用this对象上的keydown方法 //把该方法绑定到keydown.bs.carousel上
-		//keyboard参数的意思？能够键盘控制轮播方向
+	//$.proxy方法 调用this对象上的keydown方法 //把该方法绑定到keydown.bs.carousel上
+    this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this))//允许键盘控制方向的话，就调用keydown事件
+		
 	//不是移动设备（不存在ontouchstart事件），那么当options.pause == 'hover'时实现鼠标的悬停暂停
-    this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
+    this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element//鼠标具有暂停效果，且，不存在ontouchstart元素时，就绑定鼠标事件
       .on('mouseenter.bs.carousel', $.proxy(this.pause, this))//绑定鼠标进入时暂停效果
       .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))//绑定鼠标离开时恢复效果
   }
 
 	 /*
 	疑问：
-	1、proxy方法:强制执行前一个参数对象中的，后一个参数同名的方法
+	1、proxy方法:强制执行前一个参数对象中的，后一个参数同名的方法//这种情况下为什么使用proxy方法，对proxy方法得理解不够深入
 	
 */
 
@@ -483,16 +482,19 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//此函数用于控制组件开始轮转，除了手动js调用，在鼠标触发mouseleave事件时也会调用
   Carousel.prototype.cycle = function (e) {
     e || (this.paused = false)//有触发事件且没有暂停，任意一个为真，都执行移除定时器操作
-
+	//如果没传e，将paused设置为false// || 理解为前一个为false时执行后面代码
     this.interval && clearInterval(this.interval)//就移除定时器，具体如何？
+	//如果设置了interval间隔，就清除它// && 理解为前一个为true，就执行后面的代码
 
+	//如果设置了options.interval间隔，并且没有暂停
+	//就将在下一个间隔之后，执行next方法（播放下一张图片）
     this.options.interval
       && !this.paused
       && (this.interval = setInterval($.proxy(this.next, this), this.options.interval))
 		//这段语法是什么意思？//将 轮播时间间隔 输入到next方法中，并且将时间间隔赋值给interval
 		//如果没有暂停，并且时间间隔不为空，那么就设置定时器继续轮播
 
-    return this
+    return this//返回this,以便于链式操作
   }
 
 	/*
@@ -500,7 +502,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	1、&& 的语法如何解读？//猜测 前面的为true才执行后面的代码
 	2、parent方法 所得到的对象：获得当前匹配元素集合中的每个元素的父元素，使用选择器进行筛选是可选的
 		沿着DOM树向上遍历单一层级
-	3、if (/input|textarea/i.test(e.target.tagName)) return//这段语法的含义
+	3、if (/input|textarea/i.test(e.target.tagName)) return//这段语法的含义与作用
 	
 */
 	//得到当前item的下标方法//判断当前图片在整个轮播图片集的索引
@@ -530,17 +532,18 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//如果轮播图正在滚动切换，那么滚动到指定轮播项需要等到滚动切换结束（即监听到slid.bs.carousel）时才能继续操作
     if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }) // yes, "slid"
     if (activeIndex == pos) return this.pause().cycle()
-	//如果当前就是目标pos，那么就直接暂停，并在此自动轮播
+	//如果当前就是目标pos，则先暂停，然后继续执行
 	//否则的话就看pos是否大于当前，如果是的话就时next不是就是perv
     return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
   }
 	//暂停功能
   Carousel.prototype.pause = function (e) {
-    e || (this.paused = true)//暂停开启
+    e || (this.paused = true)//暂停开启//如果没传e，将paused设置为true（说明要暂停）
 	//如果刚好为轮播添加next/prev类即将开始滚动并且浏览器支持动画，鼠标移入，那么直接触发动画结束自定义事件
+	//如果有next或prev元素，并且支持动画，则触发动画
     if (this.$element.find('.next, .prev').length && $.support.transition) {
-      this.$element.trigger($.support.transition.end)
-      this.cycle(true)
+      this.$element.trigger($.support.transition.end)//触发动画
+      this.cycle(true)//开始执行
     }
 
     this.interval = clearInterval(this.interval)//清空定时器函数
@@ -568,61 +571,70 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Carousel.prototype.slide = function (type, next) {// 参数 方向、下一个item
     var $active   = this.$element.find('.item.active')//得到当前显示的item
 	//将next时可选参数，如果有就给$next，没有就用默认的，也就是当前页面
+	//如果提供了next参数，就使用这个参数，如果没提供，就使用当前活动条目的下一个图片条目
     var $next     = next || this.getItemForDirection(type, $active)//语法可参考，得到下一个item
     var isCycling = this.interval//滚动时间
     var direction = type == 'next' ? 'left' : 'right'//下一步向左，反之向右
-    var that      = this
-	//如果next正是当前页面，那么就停止滚动
+    var that      = this//获取当前调用者的this对象，防止作用域污染，（作用域污染可以研究）
+	//如果next正是当前页面，那么设置轮播标记为false
     if ($next.hasClass('active')) return (this.sliding = false)//下一个就为当前显示item，直接返回
 
-    var relatedTarget = $next[0]
+    var relatedTarget = $next[0]//得到结果是什么？
 	//触发轮播即将开始自定义事件
     var slideEvent = $.Event('slide.bs.carousel', {//滚动效果对象//滚动之前，触发该自定方法
       relatedTarget: relatedTarget,
       direction: direction
     })
 	//trigger() 方法触发被选元素的指定事件类型
-    this.$element.trigger(slideEvent)
-    if (slideEvent.isDefaultPrevented()) return
+    this.$element.trigger(slideEvent)//触发slide事件
+    if (slideEvent.isDefaultPrevented()) return//如果要轮播的对象已经是高亮，直接返回不做处理
 
-    this.sliding = true
+    this.sliding = true//标记轮播正在进行
 	
-    isCycling && this.pause()//如果isCycling为真那么就不暂停？语法和理解相反
-	
-    if (this.$indicators.length) {
+    isCycling && this.pause()//如果有间隔，则暂停自动执行
+	//处理小圆圈的高亮状态
+    if (this.$indicators.length) {//如果有小圆圈指示符
       this.$indicators.find('.active').removeClass('active')//清除当前轮播图的active类
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
+		  //获得当前高亮图片的索引，按照索引找到对的指示符
       $nextIndicator && $nextIndicator.addClass('active')//如果下一个轮播对象存在，那么就添加active类
+		//如果找到的话，就添加active样式使其高亮
     }
 
     var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"//轮动后触发自定义方法
+	//如果支持动画，并且设置了slide样式
     if ($.support.transition && this.$element.hasClass('slide')) {//如果支持动画并且这个对象有slide这个类
       $next.addClass(type)//那么就把参数type提供的类赋值给他
-      $next[0].offsetWidth // force reflow//取得next【0】的宽度
-      $active.addClass(direction)
+	  //给要轮播的元素添加type类型样式（比如next、perv）
+      $next[0].offsetWidth // force reflow//取得next【0】的宽度//重绘UI？
+      $active.addClass(direction)//给要轮播的元素添加方法（如left、right）
       $next.addClass(direction)
+		  //给当前活动元素绑定一次性动画事件，在该事件回调里执行以下操作
       $active
         .one('bsTransitionEnd', function () {
-          $next.removeClass([type, direction].join(' ')).addClass('active')
+		  //在将要轮播的元素上，删除对应的type和方向样式（如next left 或者 prev right）
+		  //然后添加active样式
+          $next.removeClass([type, direction].join(' ')).addClass('active')//.join(' ')？
 		//删除掉class并且用join组合起来，再加上active
           $active.removeClass(['active', direction].join(' '))
-          that.sliding = false
+          that.sliding = false//设置轮播状态结束
 		//绑定定是函数，再0秒后触发指定函数
+		//然后触发slid事件，这里使用setTimeout是确保UI刷新线程不被阻塞
           setTimeout(function () {
             that.$element.trigger(slidEvent)
           }, 0)
         })
         .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
-    } else {
-      $active.removeClass('active')
-      $next.addClass('active')
-      this.sliding = false
-      this.$element.trigger(slidEvent)
+    } else {//如果不支持动画
+      $active.removeClass('active')//删除当前高亮元素上的active样式
+      $next.addClass('active')//给要轮播的元素上添加高亮active样式
+      this.sliding = false//设置轮播状态结束
+      this.$element.trigger(slidEvent)//触发slid事件
     }
 
-    isCycling && this.cycle()
+    isCycling && this.cycle()//如果有间隔，则重新开始（间隔后）自动执行
 
-    return this
+    return this//返回this，以便链式操作（这里的this是data-tide="carousel"容器元素）
   }
 
 	/*
@@ -636,9 +648,10 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // ==========================
   //定义插件
   function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
+    return this.each(function () {//遍历所有符合规则的元素
+      var $this   = $(this)	//当前触发元素的jQuery对象
       var data    = $this.data('bs.carousel')
+		  //合并参数，优先级依次递增
       var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option)
       var action  = typeof option == 'string' ? option : options.slide
 
@@ -650,7 +663,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   }
 
   var old = $.fn.carousel
-
+// 保留其他库的$.fn.carousel代码（如果定义的话），以便在noConflict之后，可以继续使用该老代码
   $.fn.carousel             = Plugin
   $.fn.carousel.Constructor = Carousel
 
@@ -670,11 +683,14 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   var clickHandler = function (e) {
     var href
     var $this   = $(this)
+		//查找target，即所指定的折叠地区的id或者选择符，如果没有target，就使用href里的值
     var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
     if (!$target.hasClass('carousel')) return//如果目标元素没有carousel类，说明不是carousel容器，不做任何处理
+	//合并target上的data-slide-to属性
     var options = $.extend({}, $target.data(), $this.data())
-    var slideIndex = $this.attr('data-slide-to')
+    var slideIndex = $this.attr('data-slide-to')//查找单击元素上是否有data-slide-to属性
     if (slideIndex) options.interval = false
+	//如果存在，则取消间隔设置（因为单击data-slide-to意味着是手动触发行为，后续是不会循环播放的
 
     Plugin.call($target, options)
 
@@ -684,7 +700,8 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
     e.preventDefault()
   }
-
+	//绑定触发事件
+	//在带有data-slide或data-slide-to属性的元素上绑定事件
   $(document)
     .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
     .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler)
