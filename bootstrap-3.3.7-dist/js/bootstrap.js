@@ -428,7 +428,9 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   var Carousel = function (element, options) {//参数 元素 和 行为
     this.$element    = $(element)//容器元素，因为不管单击哪个，最终都会转换到data-ride="carousel"容器元素
     this.$indicators = this.$element.find('.carousel-indicators')//查找.carousel-indicators的元素
+	//查找小圆圈指示符元素集合
     this.options     = options
+	//插件运行参数，优先级最高的是所单击元素上的data-属性，然后是容器的data-属性
     this.paused      = null//暂停
     this.sliding     = null//滑动
     this.interval    = null//轮播切换的时间间隔
@@ -476,7 +478,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//告诉浏览器，该方法的默认函数被阻止了，不允许再次运行，只能执行我规定的函数
     e.preventDefault()//去掉默认效果
   }
-	//实现 轮播滚动功能
+	//实现 轮播滚动功能//开启轮播（默认从右向左）
 	//循环轮播，清除定时器并重新设置定时器
 	//此函数用于控制组件开始轮转，除了手动js调用，在鼠标触发mouseleave事件时也会调用
   Carousel.prototype.cycle = function (e) {
@@ -501,7 +503,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	3、if (/input|textarea/i.test(e.target.tagName)) return//这段语法的含义
 	
 */
-	//得到当前item的下标方法
+	//得到当前item的下标方法//判断当前图片在整个轮播图片集的索引
 	//获取轮播项索引值
 	//就是找到当前元素的或者下一个上一个元素，赋值给item然后看item的父级元素有几个含有.item类的子元素，将这个jQuery对象赋值给this.items
   Carousel.prototype.getItemIndex = function (item) {
@@ -520,7 +522,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     var itemIndex = (activeIndex + delta) % this.$items.length//得到下一个下标
     return this.$items.eq(itemIndex)
   }
-	//滚动效果，从当前item到指定item
+	//滚动效果，从当前item到指定item//直接轮播指定索引的图片
   Carousel.prototype.to = function (pos) {
     var that        = this//为了解决this指针变换的问题
     var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'))//得到当前正在显示的item，的index
@@ -561,6 +563,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	1、
 	
 */
+	//轮播的具体操作方法
 	//实现滚动效果//滚动函数
   Carousel.prototype.slide = function (type, next) {// 参数 方向、下一个item
     var $active   = this.$element.find('.item.active')//得到当前显示的item
