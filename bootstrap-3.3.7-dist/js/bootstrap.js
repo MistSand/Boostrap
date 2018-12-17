@@ -574,7 +574,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
     var relatedTarget = $next[0]
 	//触发轮播即将开始自定义事件
-    var slideEvent = $.Event('slide.bs.carousel', {//滚动效果对象
+    var slideEvent = $.Event('slide.bs.carousel', {//滚动效果对象//滚动之前，触发该自定方法
       relatedTarget: relatedTarget,
       direction: direction
     })
@@ -584,25 +584,27 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
     this.sliding = true
 	
-    isCycling && this.pause()//如果isCycling为真那么就不暂停
+    isCycling && this.pause()//如果isCycling为真那么就不暂停？语法和理解相反
 	
     if (this.$indicators.length) {
-      this.$indicators.find('.active').removeClass('active')
+      this.$indicators.find('.active').removeClass('active')//清除当前轮播图的active类
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
-      $nextIndicator && $nextIndicator.addClass('active')
+      $nextIndicator && $nextIndicator.addClass('active')//如果下一个轮播对象存在，那么就添加active类
     }
 
-    var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"
-    if ($.support.transition && this.$element.hasClass('slide')) {
-      $next.addClass(type)
-      $next[0].offsetWidth // force reflow
+    var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"//轮动后触发自定义方法
+    if ($.support.transition && this.$element.hasClass('slide')) {//如果支持动画并且这个对象有slide这个类
+      $next.addClass(type)//那么就把参数type提供的类赋值给他
+      $next[0].offsetWidth // force reflow//取得next【0】的宽度
       $active.addClass(direction)
       $next.addClass(direction)
       $active
         .one('bsTransitionEnd', function () {
           $next.removeClass([type, direction].join(' ')).addClass('active')
+		//删除掉class并且用join组合起来，再加上active
           $active.removeClass(['active', direction].join(' '))
           that.sliding = false
+		//绑定定是函数，再0秒后触发指定函数
           setTimeout(function () {
             that.$element.trigger(slidEvent)
           }, 0)
@@ -622,14 +624,14 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
 	/*
 	疑问：
-	1、
+	1、isDefaultPrevented：返回指定的event对象上是否调用了preventDefault()方法
 	
 */
 
 
   // CAROUSEL PLUGIN DEFINITION
   // ==========================
-
+  //定义插件
   function Plugin(option) {
     return this.each(function () {
       var $this   = $(this)
@@ -638,9 +640,9 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       var action  = typeof option == 'string' ? option : options.slide
 
       if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)))
-      if (typeof option == 'number') data.to(option)
-      else if (action) data[action]()
-      else if (options.interval) data.pause().cycle()
+      if (typeof option == 'number') data.to(option)//js方法直接触发轮播，跳转到指定轮播页
+      else if (action) data[action]()//在点击上、下一个时触发轮播
+      else if (options.interval) data.pause().cycle()//为什么要先暂停，再
     })
   }
 
@@ -666,7 +668,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     var href
     var $this   = $(this)
     var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
-    if (!$target.hasClass('carousel')) return
+    if (!$target.hasClass('carousel')) return//如果目标元素没有carousel类，说明不是carousel容器，不做任何处理
     var options = $.extend({}, $target.data(), $this.data())
     var slideIndex = $this.attr('data-slide-to')
     if (slideIndex) options.interval = false
@@ -690,6 +692,12 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       Plugin.call($carousel, $carousel.data())
     })
   })
+
+		  /*
+	疑问：
+	1、call ：
+	
+*/
 
 }(jQuery);
 
