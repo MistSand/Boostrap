@@ -426,7 +426,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // =========================
 	//构造器 
   var Carousel = function (element, options) {//参数 元素 和 行为
-    this.$element    = $(element)
+    this.$element    = $(element)//容器元素，因为不管单击哪个，最终都会转换到data-ride="carousel"容器元素
     this.$indicators = this.$element.find('.carousel-indicators')//查找.carousel-indicators的元素
     this.options     = options
     this.paused      = null//暂停
@@ -686,10 +686,10 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
     .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler)
 
-  $(window).on('load', function () {
-    $('[data-ride="carousel"]').each(function () {
+  $(window).on('load', function () {//文档加载时，绑定load方法
+    $('[data-ride="carousel"]').each(function () {//找出[data-ride="carousel"] 属性的div，该div就是轮播的父元素
       var $carousel = $(this)
-      Plugin.call($carousel, $carousel.data())
+      Plugin.call($carousel, $carousel.data())//调用该元素的data方法？data方法为什么？
     })
   })
 
