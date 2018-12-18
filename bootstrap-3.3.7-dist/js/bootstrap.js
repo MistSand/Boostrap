@@ -741,7 +741,8 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     this.$element      = $(element)
     this.options       = $.extend({}, Collapse.DEFAULTS, options)//合并参数
     this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
-                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')//该对象的作用？
+                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+		//[data-toggle="collapse"] 获取到的是，可折叠元素的控件
     this.transitioning = null//该参数的作用？
 
     if (this.options.parent) {//行为对象 有父元素
@@ -750,7 +751,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       this.addAriaAndCollapsedClass(this.$element, this.$trigger)
     }
 
-    if (this.options.toggle) this.toggle()
+    if (this.options.toggle) this.toggle()//如果存在toggle属性，调用切换方法
   }
 
   Collapse.VERSION  = '3.3.7'
@@ -760,33 +761,34 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Collapse.DEFAULTS = {
     toggle: true
   }
-
+//得到展开的方向
   Collapse.prototype.dimension = function () {
     var hasWidth = this.$element.hasClass('width')
     return hasWidth ? 'width' : 'height'
   }
-
+//展开方法
   Collapse.prototype.show = function () {
-    if (this.transitioning || this.$element.hasClass('in')) return
+    if (this.transitioning || this.$element.hasClass('in')) return//如果处于切换状态或者已经展开，直接返回
 
     var activesData
     var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+		//如果存在父元素，就获得已经展开或者关闭的元素对象
 
-    if (actives && actives.length) {
+    if (actives && actives.length) {//如果存在该对象
       activesData = actives.data('bs.collapse')
-      if (activesData && activesData.transitioning) return
+      if (activesData && activesData.transitioning) return//但是该对象正在切换状态，直接返回
     }
 
     var startEvent = $.Event('show.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
+    this.$element.trigger(startEvent)//执行展开之前的方法
+    if (startEvent.isDefaultPrevented()) return//已经执行过，直接返回
 
-    if (actives && actives.length) {
+    if (actives && actives.length) {//？为什么要隐藏
       Plugin.call(actives, 'hide')
       activesData || actives.data('bs.collapse', null)
     }
 
-    var dimension = this.dimension()
+    var dimension = this.dimension()//得到开展方向
 
     this.$element
       .removeClass('collapse')
@@ -816,12 +818,12 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
   }
-
+//隐藏
   Collapse.prototype.hide = function () {
-    if (this.transitioning || !this.$element.hasClass('in')) return
+    if (this.transitioning || !this.$element.hasClass('in')) return//正在变换，或者已经隐藏直接返回
 
     var startEvent = $.Event('hide.bs.collapse')
-    this.$element.trigger(startEvent)
+    this.$element.trigger(startEvent)//执行隐藏以前的自定义方法
     if (startEvent.isDefaultPrevented()) return
 
     var dimension = this.dimension()
@@ -854,11 +856,11 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
   }
-
+//转换状态
   Collapse.prototype.toggle = function () {
     this[this.$element.hasClass('in') ? 'hide' : 'show']()
   }
-
+//得到父元素
   Collapse.prototype.getParent = function () {
     return $(this.options.parent)
       .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
@@ -868,16 +870,16 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       }, this))
       .end()
   }
-
-  Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
-    var isOpen = $element.hasClass('in')
+	//添加状态相关的class
+  Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {//转换元素和当前元素
+    var isOpen = $element.hasClass('in')//转换元素是否处于打开状态
 
     $element.attr('aria-expanded', isOpen)
     $trigger
       .toggleClass('collapsed', !isOpen)
       .attr('aria-expanded', isOpen)
   }
-
+//得到要转换的对象
   function getTargetFromTrigger($trigger) {
     var href
     var target = $trigger.attr('data-target')
@@ -902,6 +904,11 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     })
   }
 
+/*
+	疑问：
+	1、/show|hide/.test(option)语句的中，test方法：
+*/
+
   var old = $.fn.collapse
 
   $.fn.collapse             = Plugin
@@ -919,13 +926,13 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   // COLLAPSE DATA-API
   // =================
-
+//初始化
   $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
     var $this   = $(this)
 
-    if (!$this.attr('data-target')) e.preventDefault()
+    if (!$this.attr('data-target')) e.preventDefault()//如果不包含该属性，阻止其默认效果
 
-    var $target = getTargetFromTrigger($this)
+    var $target = getTargetFromTrigger($this)//获得该元素中定义的 折叠元素
     var data    = $target.data('bs.collapse')
     var option  = data ? 'toggle' : $this.data()
 
