@@ -906,7 +906,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
 /*
 	疑问：
-	1、/show|hide/.test(option)语句的中，test方法：
+	1、/show|hide/.test(option)语句的中，test方法：option字符串是否匹配show或者hide字符串
 */
 
   var old = $.fn.collapse
