@@ -737,21 +737,22 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // COLLAPSE PUBLIC CLASS DEFINITION
   // ================================
 	//构造器
-  var Collapse = function (element, options) {//参数 元素和行为
-    this.$element      = $(element)
+  var Collapse = function (element, options) {//参数 折叠元素对象和定义的行为参数
+    this.$element      = $(element)//当前折叠区域的元素
     this.options       = $.extend({}, Collapse.DEFAULTS, options)//合并参数
     this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
-                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')//定义含有该属性的对象
 		//[data-toggle="collapse"] 获取到的是，可折叠元素的控件
-    this.transitioning = null//该参数的作用？
+    this.transitioning = null//该参数的作用？是否正在转换状态//是否正在执行显示/隐藏操作
 
-    if (this.options.parent) {//行为对象 有父元素
-      this.$parent = this.getParent()
-    } else {
+    if (this.options.parent) {//如果含有父元素，则赋值
+      this.$parent = this.getParent()//如果参数里指定了parent，则赋值它
+    } else {//如果不包含，直接使用折叠元素赋值
       this.addAriaAndCollapsedClass(this.$element, this.$trigger)
     }
 
-    if (this.options.toggle) this.toggle()//如果存在toggle属性，调用切换方法
+    if (this.options.toggle) this.toggle()//如果toggle属性为true，调用toggle方法
+	//其实bootstrap.collapse插件，在显示的内容上，会有in类，不显示的内容上会collapse类
   }
 
   Collapse.VERSION  = '3.3.7'
@@ -759,66 +760,80 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Collapse.TRANSITION_DURATION = 350
 
   Collapse.DEFAULTS = {
-    toggle: true
+    toggle: true//默认值，是否支持折叠区域的显示状态反转
   }
-//得到展开的方向
+//获取折叠区域的显示动画的打开方向，是从左向右（width），还是从上向下（height），默认为height
   Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width')
+    var hasWidth = this.$element.hasClass('width')//折叠区域元素上是否有width样式
     return hasWidth ? 'width' : 'height'
   }
-//展开方法
+//show方法用于显示折叠区域
   Collapse.prototype.show = function () {
+	  //如果正在执行collapse操作，或者该折叠元素已经显示，就不做处理了
     if (this.transitioning || this.$element.hasClass('in')) return//如果处于切换状态或者已经展开，直接返回
 
     var activesData
+		//如果parent存在（手风琴风格），则查找所有该元素内已经打开的折叠区域
     var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
-		//如果存在父元素，就获得已经展开或者关闭的元素对象
+		//如果存在父元素，就获得已经展开的div
 
-    if (actives && actives.length) {//如果存在该对象
-      activesData = actives.data('bs.collapse')
+    if (actives && actives.length) {//如果找到已打开的折叠区域存在
+      activesData = actives.data('bs.collapse')//查找该折叠区域上面的实例
+	  //如果实例存在，并且正在执行相关的collapse操作，则直接返回
       if (activesData && activesData.transitioning) return//但是该对象正在切换状态，直接返回
     }
 
-    var startEvent = $.Event('show.bs.collapse')
-    this.$element.trigger(startEvent)//执行展开之前的方法
-    if (startEvent.isDefaultPrevented()) return//已经执行过，直接返回
+    var startEvent = $.Event('show.bs.collapse')//定义要触发的事件命名空间
+    this.$element.trigger(startEvent)//执行展开之前的方法//在显示之前，触发该方法
+    if (startEvent.isDefaultPrevented()) return//如果show事件的回调里阻止了继续操作，则直接返回
 
-    if (actives && actives.length) {//？为什么要隐藏
-      Plugin.call(actives, 'hide')
-      activesData || actives.data('bs.collapse', null)
+    if (actives && actives.length) {//？为什么要隐藏，因为要实现父元素的手风琴效果，先关闭所有打开的元素，再打开选中元素
+      Plugin.call(actives, 'hide')//关闭所有找到的已打开的折叠区域
+      activesData || actives.data('bs.collapse', null)//并且消除其上面的所有实例
     }
 
     var dimension = this.dimension()//得到开展方向
 
     this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')[dimension](0)
+      .removeClass('collapse')//删除折叠区域上的collapse样式
+      .addClass('collapsing')//然后再添加collapsing样式
+		  [dimension](0)//将height设置为0，表示上下展开，如果是width，则表示左右展开
       .attr('aria-expanded', true)
 
     this.$trigger
       .removeClass('collapsed')
       .attr('aria-expanded', true)
 
-    this.transitioning = 1
-
+    this.transitioning = 1//便是正在处理collapse插件的显示工作
+	//回调函数，用于处理完成状态
     var complete = function () {
       this.$element
         .removeClass('collapsing')
-        .addClass('collapse in')[dimension]('')
+        .addClass('collapse in')[dimension]('')//添加in样式，表示已显示，将height（或width）设置为auto
       this.transitioning = 0
       this.$element
-        .trigger('shown.bs.collapse')
+        .trigger('shown.bs.collapse')//触发自定义事件
     }
 
-    if (!$.support.transition) return complete.call(this)
-
+    if (!$.support.transition) return complete.call(this)//如果不支持动画，直接调用complete函数
+	//获取表示折叠元素的scroll大小的方向，结果是scrollHeight或者scrollWidth//如何得到的？
     var scrollSize = $.camelCase(['scroll', dimension].join('-'))
-
+	//延迟350毫秒才执行动画，动画结束以后，调用complete回调函数
+	//并设置正常的高度或宽度，例如this.$element[height](this.$element[0][scrollHeight])
     this.$element
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
   }
-//隐藏
+
+	/*
+	疑问：
+	1、事件命名空间，如何理解？
+	2、如果show事件的回调里阻止了继续操作？回调时什么意思？如何阻止？
+	3、[dimension]('')与[dimension](auto)的效果是一样的吗？
+	
+*/
+
+//hide方法用于隐藏折叠区域
   Collapse.prototype.hide = function () {
     if (this.transitioning || !this.$element.hasClass('in')) return//正在变换，或者已经隐藏直接返回
 
@@ -828,7 +843,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
     var dimension = this.dimension()
 
-    this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+    this.$element[dimension](this.$element[dimension]())[0].offsetHeight//重绘折叠区域，得到实际高度
 
     this.$element
       .addClass('collapsing')
@@ -839,8 +854,8 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       .addClass('collapsed')
       .attr('aria-expanded', false)
 
-    this.transitioning = 1
-
+    this.transitioning = 1//有个知识点，再判断时 1为true 0为false
+	//回调函数，用于处理完成状态
     var complete = function () {
       this.transitioning = 0
       this.$element
@@ -852,7 +867,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     if (!$.support.transition) return complete.call(this)
 
     this.$element
-      [dimension](0)
+      [dimension](0)//根据展开的方向，直接将height（或者width）设置为0
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
   }
@@ -893,14 +908,16 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // ==========================
 
   function Plugin(option) {
-    return this.each(function () {
+    return this.each(function () {//遍历所有符合规则的元素
       var $this   = $(this)
-      var data    = $this.data('bs.collapse')
-      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
+      var data    = $this.data('bs.collapse')//获取自定义属性data-bs.collapse的值其实是collapse实例
+      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)//合并参数
+		//如果实例不存在，并且options.toggle存在，且传入option为show/hide
+		//则设施show为false，避免再string判断的时候执行data[option]
       if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+		  //如果没有collapse实例，就初始化一个，并传入this
       if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
-      if (typeof option == 'string') data[option]()
+      if (typeof option == 'string') data[option]()//如果传入的是字符串，则调用对应的方法
     })
   }
 
@@ -929,12 +946,13 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 //初始化
   $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
     var $this   = $(this)
-
+	
     if (!$this.attr('data-target')) e.preventDefault()//如果不包含该属性，阻止其默认效果
-
+//查找target，即所指定的折叠区域的id或者选择符，如果没有target，就使用href里的值
     var $target = getTargetFromTrigger($this)//获得该元素中定义的 折叠元素
-    var data    = $target.data('bs.collapse')
-    var option  = data ? 'toggle' : $this.data()
+    var data    = $target.data('bs.collapse')//查找上面是否已经有了collapse实例
+    var option  = data ? 'toggle' : $this.data()//如果有，就将toggle作为option（也就是反转状态）
+	//如果没有，手机触发元素上所有data-属性作为option配置参数
 
     Plugin.call($target, option)
   })
