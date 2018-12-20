@@ -974,126 +974,156 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // DROPDOWN CLASS DEFINITION
   // =========================
 
-  var backdrop = '.dropdown-backdrop'
-  var toggle   = '[data-toggle="dropdown"]'
+  var backdrop = '.dropdown-backdrop'//弹出下拉菜单时的背景样式
+  var toggle   = '[data-toggle="dropdown"]'//带有下拉菜单的属性
   var Dropdown = function (element) {
-    $(element).on('click.bs.dropdown', this.toggle)
+    $(element).on('click.bs.dropdown', this.toggle)//绑定点击事件
   }
 
   Dropdown.VERSION = '3.3.7'
-
+	//得到父元素//获取下拉菜单的父元素容器
   function getParent($this) {
-    var selector = $this.attr('data-target')
+    var selector = $this.attr('data-target')//得到该元素中的data-target属性
+	//如果设置了target，就针对该traget元素进行处理
 
-    if (!selector) {
-      selector = $this.attr('href')
+	//如果没有target，则查找href里设置的值
+    if (!selector) {//如果该元素没有设置data-target属性
+      selector = $this.attr('href')//得到href属性的值//如果没有target，则查找href里设置的值
       selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+	  //如果href属性有值，且是/#[A-Za-z]/格式，就替换多余的字符并赋值给selector
     }
-
-    var $parent = selector && $(selector)
-
-    return $parent && $parent.length ? $parent : $this.parent()
+	//如果上述两个步骤满足其一，设置其为parent元素（下拉菜单的容器元素）
+    var $parent = selector && $(selector)//如果selector有值，则将该id对应的对象赋值给$parent
+	//如果都不满足，就使用当前触发元素（$this）的父元素
+    return $parent && $parent.length ? $parent : $this.parent()//该对象有值且有长度时返回该对象，没有时返回给定元素的父元素
   }
-
+	//清空菜单（隐藏菜单）//关闭所有下拉菜单
   function clearMenus(e) {
-    if (e && e.which === 3) return
-    $(backdrop).remove()
-    $(toggle).each(function () {
+    if (e && e.which === 3) return//事件编号为3时，直接返回，3代表什么意思？
+    $(backdrop).remove()//清空.dropdown-backdrop样式的的元素//删除用于移动设备的背景
+    $(toggle).each(function () {//有下拉菜单属性//根据选择器，遍历所有的dropdown标记，然后全部关闭
       var $this         = $(this)
-      var $parent       = getParent($this)
+      var $parent       = getParent($this)//得到该对象的父元素，或者data-target中指定的元素
       var relatedTarget = { relatedTarget: this }
 
-      if (!$parent.hasClass('open')) return
+      if (!$parent.hasClass('open')) return//如果该父元素是打开的（下拉菜单是展开的），直接返回
 
       if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+		  //如果该事件存在且为点击事件且触发事件的是输入框，如果$parent[0]包含e.target，则直接返回
 
-      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))//执行自定义的方法（隐藏前执行）
 
       if (e.isDefaultPrevented()) return
 
       $this.attr('aria-expanded', 'false')
-      $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+      $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))//执行自定义的方法（隐藏后执行）
     })
   }
 
+	  /*
+	  疑问：
+		1、contains方法：方法用于判断指定元素内是否包含另一个元素。即判断另一个DOM元素是否指定DOM元素的后代
+	  */
+	//转换//控制下拉菜单的打开、关闭操作
   Dropdown.prototype.toggle = function (e) {
-    var $this = $(this)
+    var $this = $(this)//得到当前触发的元素对象
 
-    if ($this.is('.disabled, :disabled')) return
+    if ($this.is('.disabled, :disabled')) return//如果当前元素是禁用的，直接返回
 
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
+    var $parent  = getParent($this)//得到触发元素的父元素
+    var isActive = $parent.hasClass('open')//该父元素是否是展开的
 
-    clearMenus()
-
-    if (!isActive) {
+    clearMenus()//清除下拉框//关闭所有其他的下拉菜单，即同一个页面，只允许同时出现一个下拉菜单
+	
+	//判断：单击时当前下拉菜单是否是打开状态
+	//如果是，在clearMenus阶段就已经关闭了，所以就不需要再次关闭了
+	//如果不是，说明默认状态时关闭状态，则需要展开下拉菜单
+    if (!isActive) {//如果不是展开的
+		//如果是移动设备，则使用dropdown-backdrop样式，因为移动设备不支持click单击委托
       if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+		  //有手机的触屏事件，且父元素最近的的元素不包含.navbar-nav这个样式 
         // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
+        $(document.createElement('div'))//就创造一个div
+          .addClass('dropdown-backdrop')//绑定dropdown-backdrop样式
+          .insertAfter($(this))//？
+          .on('click', clearMenus)//绑定点击清空菜单事件
       }
 
       var relatedTarget = { relatedTarget: this }
-      $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+      $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))//执行展开前的自定义事件
 
-      if (e.isDefaultPrevented()) return
+      if (e.isDefaultPrevented()) return//如果已经阻止了默认行为，就不再处理了。
 
       $this
-        .trigger('focus')
+        .trigger('focus')//获取焦点
         .attr('aria-expanded', 'true')
 
       $parent
-        .toggleClass('open')
-        .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        .toggleClass('open')//增加open样式，打开下拉菜单，因为menu在open样式内会自动显示
+        .trigger($.Event('shown.bs.dropdown', relatedTarget))//执行展开后的自定义事件
     }
 
-    return false
+    return false//阻止该元素后续的默认行为
   }
-
+	//按键方法//利用箭头控制下拉菜单（例如，按向下箭头的时候，打开下拉菜单）
   Dropdown.prototype.keydown = function (e) {
+	  //如果按键不是Esc、或上下方向箭头，则忽略处理
     if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+		//如果按键不属于/(38|40|27|32)/ 或者 该事件触发是输入框 直接返回
 
     var $this = $(this)
 
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault()//阻止默认行为
+    e.stopPropagation()//阻止冒泡
 
-    if ($this.is('.disabled, :disabled')) return
+    if ($this.is('.disabled, :disabled')) return//如果有禁用标记，则不做处理
 
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
+    var $parent  = getParent($this)//得到父元素
+    var isActive = $parent.hasClass('open')//判断是否展开
+	//如果有open样式，或者没有open样式 但是按键是向下箭头的花，也打开下拉菜单
     if (!isActive && e.which != 27 || isActive && e.which == 27) {
-      if (e.which == 27) $parent.find(toggle).trigger('focus')
-      return $this.trigger('click')
+		//如果没展开，且事件编号不是27 或者 事件展开且事件编号是27//具体情况是？
+      if (e.which == 27) $parent.find(toggle).trigger('focus')//如果是27 找到当前焦点元素
+	  //如果按了向下箭头，则给触发元素加上焦点
+      return $this.trigger('click')//触发点击事件，默认单击事件，打开下拉菜单
     }
 
+	//返回可以利用箭头选择的下拉菜单项
+	//打开下拉菜单时，上下箭头只操作（选中）设置了role=menu（或role=listbox）的链接项
+	//必须是可见的a链接，并且不包含分隔符
     var desc = ' li:not(.disabled):visible a'
     var $items = $parent.find('.dropdown-menu' + desc)
 
-    if (!$items.length) return
+    if (!$items.length) return//如果没有，则不做处理
 
     var index = $items.index(e.target)
 
-    if (e.which == 38 && index > 0)                 index--         // up
-    if (e.which == 40 && index < $items.length - 1) index++         // down
-    if (!~index)                                    index = 0
+    if (e.which == 38 && index > 0)                 index--         // up	//按向上箭头的话，index减1
+    if (e.which == 40 && index < $items.length - 1) index++         // down	//index++//按向下箭头的话，index加1
+    if (!~index)                                    index = 0		//特殊意外情况，设置为第一个菜单项
 
-    $items.eq(index).trigger('focus')
+    $items.eq(index).trigger('focus')	//给所选择的菜单项设置焦点
   }
+
+	 /*
+	  疑问：
+		1、stopPropagation方法：阻止事件冒泡到父元素，阻止任何父事件处理程序被执行
+		2、e.stopPropagation()//阻止冒泡 ？是什么意思？
+	  */
 
 
   // DROPDOWN PLUGIN DEFINITION
   // ==========================
 
   function Plugin(option) {
-    return this.each(function () {
+    return this.each(function () {//根据选择器，遍历所有符合规则的元素
       var $this = $(this)
-      var data  = $this.data('bs.dropdown')
-
+      var data  = $this.data('bs.dropdown')//获取自定义属性dropdown的值
+		
+		//如果值不存在，则将Dropdown实例设置为data-dropdown的值
       if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+		  //如果option传递了string，则表示要执行某个方法
+		//比如传入了toggle，则要执行Dropdown实例的toggle方法，data["toggle"]相当于data.toggle();
       if (typeof option == 'string') data[option].call($this)
     })
   }
@@ -1115,11 +1145,16 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   // APPLY TO STANDARD DROPDOWN ELEMENTS
   // ===================================
-
+//绑定触发事件
   $(document)
+	  //为声明式的HTML绑定单击事件，在单击以后先关闭左右的下拉菜单
     .on('click.bs.dropdown.data-api', clearMenus)
+	//如果内部有form元素，则阻止冒泡，不做处理
     .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+	//默认行为，一般都要进行toggle操作（打开或关闭）
     .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+	//为触发元素和下拉菜单绑定keydown按钮事件，以便可以进行打开或者选择操作
+	//toggle = [data-toggle=dropdown]表示所有带有自定义属性data-toggle="dropdown"的元素
     .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
     .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
 
