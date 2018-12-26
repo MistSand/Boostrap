@@ -1174,26 +1174,31 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   // MODAL CLASS DEFINITION
   // ======================
-
-  var Modal = function (element, options) {
+	//构造器
+  var Modal = function (element, options) {//模态框对象的id 和 执行对象
     this.options             = options
-    this.$body               = $(document.body)
-    this.$element            = $(element)
-    this.$dialog             = this.$element.find('.modal-dialog')
-    this.$backdrop           = null
-    this.isShown             = null
-    this.originalBodyPad     = null
-    this.scrollbarWidth      = 0
-    this.ignoreBackdropClick = false
+    this.$body               = $(document.body)//当前页面的body对象
+    this.$element            = $(element)//元素对象
+    this.$dialog             = this.$element.find('.modal-dialog')//得到modal-dialog样式的元素对象
+    this.$backdrop           = null//背景对象
+    this.isShown             = null//是否展示状态
+    this.originalBodyPad     = null//？
+    this.scrollbarWidth      = 0//？猜测横向滚动条
+    this.ignoreBackdropClick = false//忽略背景点击
 
-    if (this.options.remote) {
+    if (this.options.remote) {//如果options存在remote属性
       this.$element
-        .find('.modal-content')
+        .find('.modal-content')//找到modal-content样式的元素对象
         .load(this.options.remote, $.proxy(function () {
-          this.$element.trigger('loaded.bs.modal')
+          this.$element.trigger('loaded.bs.modal')//？应该是执行loaded.bs.modal方法
         }, this))
     }
   }
+
+  /*
+	疑问：
+	1、为何用$.proxy方法内定义trigger方法？用法的作用是什么？
+  */
 
   Modal.VERSION  = '3.3.7'
 
@@ -1201,30 +1206,31 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Modal.BACKDROP_TRANSITION_DURATION = 150
 
   Modal.DEFAULTS = {
-    backdrop: true,
-    keyboard: true,
-    show: true
+    backdrop: true,//背景是否可以点击关闭模态框
+    keyboard: true,//按键Esc之后退出模态框
+    show: true//是否显示
   }
-
+	//转换方法
   Modal.prototype.toggle = function (_relatedTarget) {
-    return this.isShown ? this.hide() : this.show(_relatedTarget)
+    return this.isShown ? this.hide() : this.show(_relatedTarget)//如果模态框是显示的，就隐藏，否则就显示
+	//_relatedTarget？参数是什么？
   }
-
-  Modal.prototype.show = function (_relatedTarget) {
-    var that = this
+	//展示模态框方法
+  Modal.prototype.show = function (_relatedTarget) {//参数？
+    var that = this//触发该方法的对象
     var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget })
 
-    this.$element.trigger(e)
+    this.$element.trigger(e)//执行，显示模态框前的自定义方法
 
-    if (this.isShown || e.isDefaultPrevented()) return
+    if (this.isShown || e.isDefaultPrevented()) return//已经显示或者自定义方法阻止后续执行，直接返回
 
-    this.isShown = true
+    this.isShown = true//将展示状态变为true
 
-    this.checkScrollbar()
-    this.setScrollbar()
+    this.checkScrollbar()//检查滚动条
+    this.setScrollbar()//设置滚动条
     this.$body.addClass('modal-open')
 
-    this.escape()
+    this.escape()//启动按键退出方法
     this.resize()
 
     this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
@@ -1267,7 +1273,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
         that.$element.trigger('focus').trigger(e)
     })
   }
-
+	//隐藏模态框方法
   Modal.prototype.hide = function (e) {
     if (e) e.preventDefault()
 
@@ -1297,7 +1303,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
         .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
       this.hideModal()
   }
-
+	//关于焦点的方法
   Modal.prototype.enforceFocus = function () {
     $(document)
       .off('focusin.bs.modal') // guard against infinite focus loop
@@ -1309,61 +1315,61 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
         }
       }, this))
   }
-
+	//绑定按键Esc隐藏模态框方法
   Modal.prototype.escape = function () {
-    if (this.isShown && this.options.keyboard) {
+    if (this.isShown && this.options.keyboard) {//如果模态框是出现的，而且keyboard为true
       this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
-        e.which == 27 && this.hide()
+        e.which == 27 && this.hide()//如果按键是Esc，则调用隐藏方法
       }, this))
-    } else if (!this.isShown) {
+    } else if (!this.isShown) {//如果不是展开的，就移除keydown方法
       this.$element.off('keydown.dismiss.bs.modal')
     }
   }
-
+	//
   Modal.prototype.resize = function () {
-    if (this.isShown) {
+    if (this.isShown) {//如果是展开的，就执行handleUpdate方法
       $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
-    } else {
+    } else {//不过不是移除resize.bs.modal 方法的绑定
       $(window).off('resize.bs.modal')
     }
   }
-
+	//隐藏模态框
   Modal.prototype.hideModal = function () {
     var that = this
-    this.$element.hide()
+    this.$element.hide()//隐藏该模态框元素
     this.backdrop(function () {
       that.$body.removeClass('modal-open')
-      that.resetAdjustments()
-      that.resetScrollbar()
+      that.resetAdjustments()//？
+      that.resetScrollbar()//？
       that.$element.trigger('hidden.bs.modal')
     })
   }
-
+	//移除掉背景
   Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove()
-    this.$backdrop = null
+    this.$backdrop && this.$backdrop.remove()//如果存在背景，就把背景移除掉
+    this.$backdrop = null//把背景对象制空
   }
-
+	//添加背景方法
   Modal.prototype.backdrop = function (callback) {
     var that = this
-    var animate = this.$element.hasClass('fade') ? 'fade' : ''
+    var animate = this.$element.hasClass('fade') ? 'fade' : ''//如果有fade的calss ，就是有淡入淡出效果
 
-    if (this.isShown && this.options.backdrop) {
-      var doAnimate = $.support.transition && animate
+    if (this.isShown && this.options.backdrop) {//如果已经展开，并且有背景
+      var doAnimate = $.support.transition && animate//如果支持动画，并且有淡入淡出效果，则doAnimate为true
 
-      this.$backdrop = $(document.createElement('div'))
+      this.$backdrop = $(document.createElement('div'))//创造背景对象
         .addClass('modal-backdrop ' + animate)
         .appendTo(this.$body)
 
-      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
-        if (this.ignoreBackdropClick) {
+      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {//绑定点击背景方法
+        if (this.ignoreBackdropClick) {//如果忽略背景点击，点击背景直接不执行操作
           this.ignoreBackdropClick = false
           return
         }
-        if (e.target !== e.currentTarget) return
+        if (e.target !== e.currentTarget) return//？
         this.options.backdrop == 'static'
           ? this.$element[0].focus()
-          : this.hide()
+          : this.hide()//
       }, this))
 
       if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
@@ -1378,11 +1384,11 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
           .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
         callback()
 
-    } else if (!this.isShown && this.$backdrop) {
+    } else if (!this.isShown && this.$backdrop) {//如果没展开，而且有背景
       this.$backdrop.removeClass('in')
 
       var callbackRemove = function () {
-        that.removeBackdrop()
+        that.removeBackdrop()//移除背景
         callback && callback()
       }
       $.support.transition && this.$element.hasClass('fade') ?
@@ -1395,6 +1401,11 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       callback()
     }
   }
+
+   /*
+	疑问：
+	1、callback方法
+  */
 
   // these following methods are used to handle overflowing modals
 
@@ -1417,19 +1428,24 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       paddingRight: ''
     })
   }
-
+	//检查滚动条？
   Modal.prototype.checkScrollbar = function () {
-    var fullWindowWidth = window.innerWidth
-    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
-      var documentElementRect = document.documentElement.getBoundingClientRect()
-      fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
+    var fullWindowWidth = window.innerWidth//当前窗口的整体宽度
+    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8//如果当前窗体宽度不存在
+      var documentElementRect = document.documentElement.getBoundingClientRect()//获得document元素距离页面四边的距离
+      fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)//右距离 - 左距离 = 元素的宽
     }
-    this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth
+    this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth//document.body.clientWidth 可视部分的宽度 小于窗口宽度 则超出页面
     this.scrollbarWidth = this.measureScrollbar()
   }
-
+	/*
+	疑问：
+	1、getBoundingClientRect 方法：这个方法返回一个矩形对象，包含四个属性：left、top、right和buttom分别表示元素各边与页面上边和左边的距离。
+	2、Math.abs 方法：返回数的绝对值
+  */
+	//设置滚动条
   Modal.prototype.setScrollbar = function () {
-    var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)
+    var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)//？
     this.originalBodyPad = document.body.style.paddingRight || ''
     if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
   }
@@ -1437,21 +1453,26 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Modal.prototype.resetScrollbar = function () {
     this.$body.css('padding-right', this.originalBodyPad)
   }
-
+	//测量滚动条
   Modal.prototype.measureScrollbar = function () { // thx walsh
     var scrollDiv = document.createElement('div')
     scrollDiv.className = 'modal-scrollbar-measure'
     this.$body.append(scrollDiv)
-    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth
+    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth//总宽度 - 可视窗口宽度 = 滚动条宽度
     this.$body[0].removeChild(scrollDiv)
-    return scrollbarWidth
+    return scrollbarWidth//返回滚动条宽度
   }
+
+	/*
+	疑问：
+	1、offsetWidth：元素的border+padding+content的宽度和高度
+  */
 
 
   // MODAL PLUGIN DEFINITION
   // =======================
-
-  function Plugin(option, _relatedTarget) {
+	//modal方法
+  function Plugin(option, _relatedTarget) {//_relatedTarget？参数是什么意思？
     return this.each(function () {
       var $this   = $(this)
       var data    = $this.data('bs.modal')
@@ -1481,18 +1502,18 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // MODAL DATA-API
   // ==============
 
-  $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
+  $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {//在拥有属性[data-toggle="modal"]的元素上绑定点击事件
     var $this   = $(this)
     var href    = $this.attr('href')
     var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
     var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
 
-    if ($this.is('a')) e.preventDefault()
+    if ($this.is('a')) e.preventDefault()//取出a标签的默认方法
 
     $target.one('show.bs.modal', function (showEvent) {
       if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
       $target.one('hidden.bs.modal', function () {
-        $this.is(':visible') && $this.trigger('focus')
+        $this.is(':visible') && $this.trigger('focus')//？
       })
     })
     Plugin.call($target, option, this)
