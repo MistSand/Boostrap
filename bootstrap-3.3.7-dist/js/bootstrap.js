@@ -1168,28 +1168,31 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
-
+//1.定义立即调用的函数
 +function ($) {
-  'use strict';
+  'use strict';//使用严格模式 ES5支持
 
   // MODAL CLASS DEFINITION
   // ======================
 	//构造器
   var Modal = function (element, options) {//模态框对象的id 和 执行对象
-    this.options             = options
+	  //element表示modal弹出框容器及内部元素，options是设置选项
+    this.options             = options//传进来的各种参数
     this.$body               = $(document.body)//当前页面的body对象
     this.$element            = $(element)//元素对象
     this.$dialog             = this.$element.find('.modal-dialog')//得到modal-dialog样式的元素对象
-    this.$backdrop           = null//背景对象
+    this.$backdrop           = null//背景对象//modal下面的北京对象
+									//默认情况下，不设置是否已经显示弹窗，
+									
     this.isShown             = null//是否展示状态
     this.originalBodyPad     = null//？
     this.scrollbarWidth      = 0//？猜测横向滚动条
     this.ignoreBackdropClick = false//忽略背景点击
-
+	//如果设置了remote，就加载remote制定的url内容到modal-content样式的元素内，并触发loaded.bs.modal事件
     if (this.options.remote) {//如果options存在remote属性
       this.$element
         .find('.modal-content')//找到modal-content样式的元素对象
-        .load(this.options.remote, $.proxy(function () {
+        .load(this.options.remote, $.proxy(function () {//就加载remote制定的url内容
           this.$element.trigger('loaded.bs.modal')//？应该是执行loaded.bs.modal方法
         }, this))
     }
@@ -1208,18 +1211,18 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Modal.DEFAULTS = {
     backdrop: true,//背景是否可以点击关闭模态框
     keyboard: true,//按键Esc之后退出模态框
-    show: true//是否显示
+    show: true//是否显示，单击触发元素时打开弹窗
   }
-	//转换方法
+	//反转弹窗状态
   Modal.prototype.toggle = function (_relatedTarget) {
     return this.isShown ? this.hide() : this.show(_relatedTarget)//如果模态框是显示的，就隐藏，否则就显示
 	//_relatedTarget？参数是什么？
   }
-	//展示模态框方法
+	//打开弹窗
   Modal.prototype.show = function (_relatedTarget) {//参数？
     var that = this//触发该方法的对象
     var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget })
-
+		//定义弹窗前的触发事件
     this.$element.trigger(e)//执行，显示模态框前的自定义方法
 
     if (this.isShown || e.isDefaultPrevented()) return//已经显示或者自定义方法阻止后续执行，直接返回
@@ -1234,53 +1237,54 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     this.resize()
 
     this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
-
-    this.$dialog.on('mousedown.dismiss.bs.modal', function () {
-      that.$element.one('mouseup.dismiss.bs.modal', function (e) {
-        if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
+	//如果单机了元素内的子元素（带有[data-dismiss="modal"]属性），则关闭弹窗
+    this.$dialog.on('mousedown.dismiss.bs.modal', function () {//绑定鼠标按下事件
+      that.$element.one('mouseup.dismiss.bs.modal', function (e) {//鼠标弹起（一次单击事件）
+        if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true//？
       })
     })
 
-    this.backdrop(function () {
+    this.backdrop(function () {//绘制背景以后，处理以下代码
       var transition = $.support.transition && that.$element.hasClass('fade')
-
+		//判断浏览器是否支持动画，并且弹窗是否设置了动画过渡效果（是否有fade样式）
       if (!that.$element.parent().length) {
         that.$element.appendTo(that.$body) // don't move modals dom position
-      }
+      }//如果modal弹窗没有父容器，则将它附加到body上
 
       that.$element
         .show()
-        .scrollTop(0)
+        .scrollTop(0)//显示modal弹窗
 
       that.adjustDialog()
 
       if (transition) {
         that.$element[0].offsetWidth // force reflow
-      }
+      }//如果支持动画，强制刷新UI现场，重绘弹窗
 
-      that.$element.addClass('in')
+      that.$element.addClass('in')//给modal弹窗添加in样式，和modal样式一起
 
-      that.enforceFocus()
+      that.enforceFocus()//强制为弹窗设置焦点
 
       var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget })
 
       transition ?
-        that.$dialog // wait for modal to slide in
+        that.$dialog // wait for modal to slide in//弹窗元素
           .one('bsTransitionEnd', function () {
+			  //如果支持动画，则动画结束以后给弹窗内的元素设置焦点，并触发shown事件
             that.$element.trigger('focus').trigger(e)
           })
           .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-        that.$element.trigger('focus').trigger(e)
+        that.$element.trigger('focus').trigger(e)//否则直接设置焦点，触发shown事件
     })
   }
-	//隐藏模态框方法
+	//关闭弹窗
   Modal.prototype.hide = function (e) {
-    if (e) e.preventDefault()
+    if (e) e.preventDefault()	//先阻止冒泡行为？什么是冒泡行为？
 
     e = $.Event('hide.bs.modal')
 
     this.$element.trigger(e)
-
+		
     if (!this.isShown || e.isDefaultPrevented()) return
 
     this.isShown = false
@@ -1288,14 +1292,14 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
     this.escape()
     this.resize()
 
-    $(document).off('focusin.bs.modal')
+    $(document).off('focusin.bs.modal')//取消所有的focusin.bs.modal事件
 
     this.$element
-      .removeClass('in')
-      .off('click.dismiss.bs.modal')
-      .off('mouseup.dismiss.bs.modal')
+      .removeClass('in')	//删除in样式
+      .off('click.dismiss.bs.modal')	//取消点击事件
+      .off('mouseup.dismiss.bs.modal')	//取消鼠标弹起事件
 
-    this.$dialog.off('mousedown.dismiss.bs.modal')
+    this.$dialog.off('mousedown.dismiss.bs.modal')	//取消背景对象的鼠标按下事件
 
     $.support.transition && this.$element.hasClass('fade') ?
       this.$element
@@ -1303,25 +1307,26 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
         .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
       this.hideModal()
   }
-	//关于焦点的方法
+	//确保当前打开的弹窗处于焦点状态
   Modal.prototype.enforceFocus = function () {
-    $(document)
-      .off('focusin.bs.modal') // guard against infinite focus loop
+    $(document)		
+      .off('focusin.bs.modal') // guard against infinite focus loop//禁用所有的focusin事件，防止无限循环？如何防止
       .on('focusin.bs.modal', $.proxy(function (e) {
         if (document !== e.target &&
-            this.$element[0] !== e.target &&
-            !this.$element.has(e.target).length) {
+            this.$element[0] !== e.target &&//如果处于焦点的元素不是当前元素
+            !this.$element.has(e.target).length) {//或不包含当前元素
           this.$element.trigger('focus')
+			  //如果处于焦点的元素不是当前元素（或不包含当前元素），则强制给当前元素设置焦点
         }
       }, this))
   }
-	//绑定按键Esc隐藏模态框方法
+	//绑定按键Esc键，是否退出处理
   Modal.prototype.escape = function () {
     if (this.isShown && this.options.keyboard) {//如果模态框是出现的，而且keyboard为true
-      this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
+      this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {//检测键盘事件，如果是Esc（keycode=27）键，则关闭
         e.which == 27 && this.hide()//如果按键是Esc，则调用隐藏方法
       }, this))
-    } else if (!this.isShown) {//如果不是展开的，就移除keydown方法
+    } else if (!this.isShown) {//如果不是展开的，就移除keydown方法	//否则取消键盘事件检测
       this.$element.off('keydown.dismiss.bs.modal')
     }
   }
@@ -1337,30 +1342,31 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   Modal.prototype.hideModal = function () {
     var that = this
     this.$element.hide()//隐藏该模态框元素
-    this.backdrop(function () {
+    this.backdrop(function () {//清除背景
       that.$body.removeClass('modal-open')
-      that.resetAdjustments()//？
-      that.resetScrollbar()//？
+      that.resetAdjustments()//清除背景？
+      that.resetScrollbar()//清除滚动条
       that.$element.trigger('hidden.bs.modal')
     })
   }
-	//移除掉背景
+	//删除背景，关闭弹窗时触发
   Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove()//如果存在背景，就把背景移除掉
+    this.$backdrop && this.$backdrop.remove()//如果存在背景，就删除背景元素
     this.$backdrop = null//把背景对象制空
   }
-	//添加背景方法
+	//添加背景，打开弹窗时触发
   Modal.prototype.backdrop = function (callback) {
     var that = this
     var animate = this.$element.hasClass('fade') ? 'fade' : ''//如果有fade的calss ，就是有淡入淡出效果
 
-    if (this.isShown && this.options.backdrop) {//如果已经展开，并且有背景
+    if (this.isShown && this.options.backdrop) {//如果已经展开，并且设置了backdrop参数
       var doAnimate = $.support.transition && animate//如果支持动画，并且有淡入淡出效果，则doAnimate为true
-
+	//定义动画标识
+	//在body上定义背景div元素，并附加fade标识以支持动画
       this.$backdrop = $(document.createElement('div'))//创造背景对象
         .addClass('modal-backdrop ' + animate)
         .appendTo(this.$body)
-
+	//背景被单击时进行判断：如果backdrop参数为static，则强制讲弹窗设置为焦点；否则，关闭弹窗
       this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {//绑定点击背景方法
         if (this.ignoreBackdropClick) {//如果忽略背景点击，点击背景直接不执行操作
           this.ignoreBackdropClick = false
@@ -1373,11 +1379,11 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       }, this))
 
       if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
-
+		//如果支持动画，强制刷刷新UI现场，重绘弹窗
       this.$backdrop.addClass('in')
 
-      if (!callback) return
-
+      if (!callback) return//如果没有回调，则直接返回
+		//如果支持动画，则动画结束后执行回调函数；否则，直接执行回调函数？回调函数怎么定义
       doAnimate ?
         this.$backdrop
           .one('bsTransitionEnd', callback)
@@ -1473,12 +1479,15 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
   // =======================
 	//modal方法
   function Plugin(option, _relatedTarget) {//_relatedTarget？参数是什么意思？
-    return this.each(function () {
+    return this.each(function () {//根据选择器，遍历所有符合规则的元素
       var $this   = $(this)
-      var data    = $this.data('bs.modal')
+      var data    = $this.data('bs.modal')//获取自定义属性bs.modal的值
+	  //讲默认参数、选择器所在元素的自定义属性（data-开头）和option参数，这三种值合并在一起，作为options参数
       var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option)
 
       if (!data) $this.data('bs.modal', (data = new Modal(this, options)))
+		  //如果option传递了string，则表示要执行某个方法
+		//比如传入show，则要执行modal实例的show方法
       if (typeof option == 'string') data[option](_relatedTarget)
       else if (options.show) data.show(_relatedTarget)
     })
@@ -1501,18 +1510,23 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   // MODAL DATA-API
   // ==============
-
+//绑定触发事件
   $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {//在拥有属性[data-toggle="modal"]的元素上绑定点击事件
-    var $this   = $(this)
-    var href    = $this.attr('href')
-    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
-    var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
+    //检测所有拥有自定义属性data-toggle="modal"的元素上的单击事件
+	var $this   = $(this)
+    var href    = $this.attr('href')	//获取href属性值
 
-    if ($this.is('a')) e.preventDefault()//取出a标签的默认方法
+	//获取 data-target属性值，如果没有，则获取href值，该值时所弹出的元素的id
+    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
+    //如果弹窗元素上已经有该弹窗实例（即弹出过一次了），则设置option值为字符串toggle
+	//否则将remote值（如果有的话）、弹窗元素上的自定义属性集合、触发元素上的自定义属性集合，合并为option对象
+	var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
+
+    if ($this.is('a')) e.preventDefault()//取出a标签的默认方法//如果a链接元素，则要阻止默认行为
 
     $target.one('show.bs.modal', function (showEvent) {
       if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
-      $target.one('hidden.bs.modal', function () {
+      $target.one('hidden.bs.modal', function () {//定义一次hide事件，给所单击元素加上焦点
         $this.is(':visible') && $this.trigger('focus')//？
       })
     })
