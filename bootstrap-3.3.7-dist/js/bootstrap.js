@@ -1550,8 +1550,8 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   // TOOLTIP PUBLIC CLASS DEFINITION
   // ===============================
-
-  var Tooltip = function (element, options) {
+//构造器
+  var Tooltip = function (element, options) {//触发元素本身 和 参数
     this.type       = null
     this.options    = null
     this.enabled    = null
@@ -1582,7 +1582,7 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       padding: 0
     }
   }
-
+	//初始化方法
   Tooltip.prototype.init = function (type, element, options) {
     this.enabled   = true
     this.type      = type
