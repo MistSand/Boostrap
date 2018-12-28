@@ -1606,8 +1606,8 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       if (trigger == 'click') {
         this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
       } else if (trigger != 'manual') {
-        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
-        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
+        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'//鼠标进入
+        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'//鼠标离开
 
         this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
         this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
@@ -1618,15 +1618,15 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
       (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
       this.fixTitle()
   }
-
+//得到初始化
   Tooltip.prototype.getDefaults = function () {
     return Tooltip.DEFAULTS
   }
-
+//得到option方法
   Tooltip.prototype.getOptions = function (options) {
     options = $.extend({}, this.getDefaults(), this.$element.data(), options)
 
-    if (options.delay && typeof options.delay == 'number') {
+    if (options.delay && typeof options.delay == 'number') {//如果有延迟，并且是number类型
       options.delay = {
         show: options.delay,
         hide: options.delay
@@ -1635,18 +1635,18 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
     return options
   }
-
+//得到option对象
   Tooltip.prototype.getDelegateOptions = function () {
     var options  = {}
     var defaults = this.getDefaults()
 
-    this._options && $.each(this._options, function (key, value) {
+    this._options && $.each(this._options, function (key, value) {//如果存在option对象
       if (defaults[key] != value) options[key] = value
     })
 
     return options
   }
-
+//进入
   Tooltip.prototype.enter = function (obj) {
     var self = obj instanceof this.constructor ?
       obj : $(obj.currentTarget).data('bs.' + this.type)
