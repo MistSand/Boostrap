@@ -1567,16 +1567,16 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 
   Tooltip.TRANSITION_DURATION = 150
 
-  Tooltip.DEFAULTS = {
-    animation: true,
-    placement: 'top',
-    selector: false,
+  Tooltip.DEFAULTS = {//默认设置项
+    animation: true,//css渐变滤镜效果
+    placement: 'top',//提示工具出现方向
+    selector: false,//是否委派到指定的目标
     template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
-    trigger: 'hover focus',
-    title: '',
-    delay: 0,
-    html: false,
-    container: false,
+    trigger: 'hover focus',//触发方式
+    title: '',//提示的内容
+    delay: 0,//延迟的秒数
+    html: false,//是否插入HTML
+    container: false,//向指定元素追加提示工具
     viewport: {
       selector: 'body',
       padding: 0
@@ -1585,19 +1585,22 @@ if (typeof jQuery === 'undefined') {//判断 传入的jQuery对象是否为空
 	//初始化方法
   Tooltip.prototype.init = function (type, element, options) {
     this.enabled   = true
-    this.type      = type
-    this.$element  = $(element)
-    this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
-    this.inState   = { click: false, hover: false, focus: false }
+    this.type      = type//tooltip
+    this.$element  = $(element)//触发元素
+    this.options   = this.getOptions(options)//得到定义的事件
+    this.$viewport = this.options.viewport &&//默认存在viewport对象
+		$($.isFunction(this.options.viewport) ?//是否是个function函数对象
+			this.options.viewport.call(this, this.$element) //是的话就执行
+				: (this.options.viewport.selector || this.options.viewport))//不包含selector的话 直接返回空，包含的话 返回viewport对象
+    this.inState   = { click: false, hover: false, focus: false }//初始化状态对象
 
     if (this.$element[0] instanceof document.constructor && !this.options.selector) {
       throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
     }
 
-    var triggers = this.options.trigger.split(' ')
+    var triggers = this.options.trigger.split(' ')//用空格区分出hover 和 focus
 
-    for (var i = triggers.length; i--;) {
+    for (var i = triggers.length; i--;) {//遍历出 触发的方式
       var trigger = triggers[i]
 
       if (trigger == 'click') {
